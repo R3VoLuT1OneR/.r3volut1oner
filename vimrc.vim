@@ -1,5 +1,5 @@
 " Auto load modules. module autoload/pathogen.vim
-call pathogen#infect('bundle')
+call pathogen#infect()
 syntax on
 filetype plugin indent on
 
