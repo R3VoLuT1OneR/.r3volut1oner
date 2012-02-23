@@ -5,7 +5,7 @@ export EDITOR='/usr/bin/vim'
 PS1="\[\e[1;34m\][\u@\h]\[\e[m\] \[\e[1;32m\]\w \[\e[1;37m\]\$ \[\e[m\]"
 
 # Alias definitions.
-if [ -f ~/.r3volut1oner/bash/aliases ]; then
+if [ -f ~/.r3volut1oner/bash/aliases.sh ]; then
     . ~/.r3volut1oner/bash/aliases.sh
 fi
 
