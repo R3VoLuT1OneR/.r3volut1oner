@@ -81,6 +81,22 @@
     m:0x0 + c:122
     XF86AudioLowerVolume 
 
+"cmus-remote -n"
+    m:0x0 + c:171
+    XF86AudioNext
+
+"cmus-remote -r"
+    m:0x0 + c:173
+    XF86AudioPrev
+
+"cmus-remote -s"
+    m:0x0 + c:174
+    XF86AudioStop
+
+"cmus-remote -u"
+    m:0x0 + c:172
+    XF86AudioPlay
+
 ##################################
 # End of xbindkeys configuration #
 ##################################
