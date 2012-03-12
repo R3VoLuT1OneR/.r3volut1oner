@@ -2,8 +2,8 @@
 
 # Installing bashrc
 echo "# Load .r3volut1oner modules
-if [ -f ~/.r3volut1oner/bashrc.sh ]; then
-	. ~/.r3volut1oner/bashrc.sh
+if [ -f ./bashrc.sh ]; then
+	. ./bashrc.sh
 fi" >> ~/.bashrc;
 
 # Installing VIMrc
@@ -14,7 +14,7 @@ else
 	if [ -f ~/.vimrc ]; then
 		mv ~/.vimrc ~/.vimrc.old
 	fi
-	ln -s ~/.r3volut1oner/vimrc.vim ~/.vimrc
+	ln -s ./vimrc.vim ~/.vimrc
 fi
 
 # Instalation VIM modules
@@ -25,5 +25,25 @@ else
 	if [ -d ~/.vim ]; then
 		mv ~/.vim ~/.vim.old
 	fi
-	ln -s ~/.r3volut1oner/vim ~/.vim
+	ln -s ./vim ~/.vim
+fi
+
+# Install xbindkeys
+if [ -f ~/.xbindkeysrc.old ]
+then
+    echo "Can't backup old configs. Remove ~/.xbindkeysrc"
+else
+    if [ ~/.xbindkeysrc ]
+    then
+        mv ~/.xbindkeysrc ~/.xbindkeys.old
+    fi
+    ln -s ./xbindkeys/xbindkeysrc ~/.xbindkeysrc
+fi
+
+# Install bin dir
+if [ -d ~/bin ]
+then
+    echo "Can't create link to ~/bin, delete it before"
+else
+    ln -s ./bin ~/bin
 fi
