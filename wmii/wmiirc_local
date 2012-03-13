@@ -1,0 +1,9 @@
+MODKEY=Mod4
+
+# Tagging Rules
+wmiir write /tagrules <<EOF
+    /mplayer|VLC/ floating=on
+    /mplayer|VLC/ -> ~
+    /terminal/ -> sel
+    /firefox|chrom/ -> sel
+EOF
