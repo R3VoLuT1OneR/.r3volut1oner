@@ -11,7 +11,7 @@ if [ -x /usr/bin/dircolors ]; then
 fi
 
 # Load NERDTree in vim
-alias vimt='vim -c "NERDTree"'
+alias vimt='vim -c "NERDTree" -c "TlistToggle"'
 
 # some more ls aliases
 alias lla='ls -AhlF'
