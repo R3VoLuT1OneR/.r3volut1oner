@@ -18,3 +18,9 @@ alias lla='ls -AhlF'
 alias ll='ls -hlF'
 alias la='ls -A'
 alias l='ls -CF'
+
+# Add aliases to the projects
+for d in `ls ~/Documents/Development`
+do
+    alias cd:$d="cd ~/Documents/Development/$d"
+done
