@@ -65,6 +65,17 @@
 #"rxvt"
 #  Control + b:2 + Release
 #
+#
+
+# Lock with Control + Alt + L
+"slock"
+    m:0x1c + c:46
+    Control+Alt+Mod2 + l
+
+# Lock with Fn + Pause/Breake
+"slock"
+     m:0x10 + c:78
+     Mod2 + Scroll_Lock
 
 # Toggle sound
 "xmixer sset Master toggle"
@@ -81,18 +92,22 @@
     m:0x0 + c:122
     XF86AudioLowerVolume 
 
+# Cmus Next button
 "cmus-remote -n"
     m:0x0 + c:171
     XF86AudioNext
 
+# Cmus Prev button
 "cmus-remote -r"
     m:0x0 + c:173
     XF86AudioPrev
 
+# Cmus Stop button
 "cmus-remote -s"
     m:0x0 + c:174
     XF86AudioStop
 
+# Cmus Play button
 "cmus-remote -u"
     m:0x0 + c:172
     XF86AudioPlay
