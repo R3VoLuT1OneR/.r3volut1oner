@@ -1,5 +1,11 @@
 MODKEY=Mod4
 
+# start dropbox
+nohup dropbox start &
+
+# start guake terminal
+nohup guake &
+
 # Tagging Rules
 wmiir write /tagrules <<EOF
     /mplayer|VLC/ floating=on
