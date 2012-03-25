@@ -13,3 +13,17 @@ wmiir write /tagrules <<EOF
     /terminal/ -> sel
     /firefox|chrom/ -> sel
 EOF
+
+# Status bar
+wmiir remove /rbab/status
+wmiir create /rbar/status < /dev/null
+wmiir xwrite /rbar/status \
+    'dropbox:' $(dropbox status) '|'\
+    $(acpi -b | awk '{print $4 $5 $6}'| sed 's/until/ (+)/' | sed 's/remaining/ (-)/' | awk -F ',' '{print $1" "$2}') '|'\
+    'Net:' \
+    $(iwconfig wlan0 | grep ESSID | sed 's/.*ESSID:"//g; s/"\s*$//g') \
+    '[' $(iwconfig wlan0 | grep 'Link Quality' | sed 's/\s*Link Quality=//; s/\s.*//') ']' '|' \
+    $(uptime | sed 's/.*://; s/,//g') '|' \
+    $(date)
+
+
