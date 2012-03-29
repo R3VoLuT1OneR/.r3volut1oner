@@ -27,3 +27,9 @@ set expandtab
 " Tlist configs
 let Tlist_Use_Right_Window = 1
 let Tlist_Show_One_File    = 1
+
+" Mini Bufer Explorer
+let g:miniBufExplMapWindowNavVim = 1 
+let g:miniBufExplMapWindowNavArrows = 1 
+let g:miniBufExplMapCTabSwitchBufs = 1 
+let g:miniBufExplModSelTarget = 1 
