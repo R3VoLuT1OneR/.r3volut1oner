@@ -12,6 +12,9 @@ nmap <F3> <Esc>:NERDTree<cr>
 vmap <F3> <Esc>:NERDTree<cr>
 imap <F3> <Esc>:NERDTree<cr>
 
+" tag <a>
+nmap <;h> <a href=""></a><ESC>5hi
+
 " Set line numbers
 set nu
 
@@ -27,6 +30,13 @@ set expandtab
 " Tlist configs
 let Tlist_Use_Right_Window = 1
 let Tlist_Show_One_File    = 1
+
+" Moving windows
+" set wmw=0
+nmap <c-h> <c-w>h
+nmap <c-l> <c-w>l
+nmap <c-j> <c-w>j
+nmap <c-k> <c-w>k
 
 " Mini Bufer Explorer
 let g:miniBufExplMapWindowNavVim = 1
