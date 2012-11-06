@@ -20,7 +20,7 @@ alias la='ls -A'
 alias l='ls -CF'
 
 # Add aliases to the projects
-for d in `ls ~/Development`
+for d in `ls ~/Documents/Development`
 do
-    alias cd:$d="cd ~/Development/$d"
+    alias cd:$d="cd ~/Documents/Development/$d"
 done

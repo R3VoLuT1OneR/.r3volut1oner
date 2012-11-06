@@ -64,7 +64,7 @@ u="$e_blue\u$e_normal";
   _prompt="$e_blue[$u$e_blue@\h]$e_normal $e_green\w$e_normal";
   
   ## Color git status if any
-  branch=`__git_ps1 "(%s)"`
+  branch=`__git_branch`
   if [ -n "$branch" ] ; then
 if [ -z "$_dumb_prompt" ]; then
       ## Assumes that untracked files are always listed after modified ones
@@ -92,6 +92,11 @@ dumb_prompt () {
 smart_prompt () {
   unset _dumb_prompt
 }
+
+__git_branch () {
+  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
+}
+
 
 if [ -n "$PS1" ] ; then
 PROMPT_COMMAND='_update_prompt'
