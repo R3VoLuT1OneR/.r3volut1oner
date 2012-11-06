@@ -1,49 +1,62 @@
 #!/bin/bash
+INSTALL_BASE_DIR=`dirname $0`
 
-# Installing bashrc
-echo "# Load .r3volut1oner modules
-if [ -f ./bashrc.sh ]; then
-	. ./bashrc.sh
-fi" >> ~/.bashrc;
+__main () {
 
-# Installing VIMrc
-if [ -f ~/.vimrc.old ]; then
-	echo "Can't make backup for old ~/.vimrc
-Move/remove ~/.vimrc.old before install"
-else
-	if [ -f ~/.vimrc ]; then
-		mv ~/.vimrc ~/.vimrc.old
-	fi
-	ln -s ./vimrc.vim ~/.vimrc
-fi
+    __install_bashrc &&
+    __install_vimrc &&
+    __install_git
 
-# Instalation VIM modules
-if [ -d ~/.vim.old ]; then
-	echo "Can't make backup for old ~/vim.
-Move/remove ~/.vim.old"
-else
-	if [ -d ~/.vim ]; then
-		mv ~/.vim ~/.vim.old
-	fi
-	ln -s ./vim ~/.vim
-fi
+}
 
-# Install xbindkeys
-if [ -f ~/.xbindkeysrc.old ]
-then
-    echo "Can't backup old configs. Remove ~/.xbindkeysrc"
-else
-    if [ ~/.xbindkeysrc ]
-    then
-        mv ~/.xbindkeysrc ~/.xbindkeys.old
-    fi
-    ln -s ./xbindkeys/xbindkeysrc ~/.xbindkeysrc
-fi
+__install_bashrc () {
 
-# Install bin dir
-if [ -d ~/bin ]
-then
-    echo "Can't create link to ~/bin, delete it before"
-else
-    ln -s ./bin ~/bin
-fi
+    # Installing bashrc
+    echo "# Load .r3volut1oner modules
+    if [ -f ./bashrc.sh ]; then
+        . ./bashrc.sh
+    fi" >> ~/.bashrc;
+
+}
+
+__install_vimrc () {
+
+    VIM_DIR="~/.vim"
+    VIMRC="~/.vimrc"
+
+    BACKUP_VIM_DIR="${VIM_DIR}.old"
+    BACKUP_VIMRC="${VIMRC}.old"
+
+    NEW_VIM_DIR="$INSTALL_BASE_DIR/vim"
+    NEW_VIMRC="$NEW_VIM_DIR/vimrc.vim"
+
+    # Fall if can't make backup
+    if [[ -d $BACKUP_VIM_DIR || -e $BACKUP_VIMRC ]]; then return 0; fi
+
+    # Backup old vim dir
+    if [ -d $VIM_DIR ]; then mv $VIM_DIR ${VIM_DIR}.old; fi
+
+    # Backup old vimrc file
+    if [ -e $VIMRC ]; then mv $VIMRC ${VIMRC}.old; fi
+
+    # Install new dir and rc file
+    ln -s $NEW_VIM_DIR $VIM_DIR &&
+    ln -s $NEW_VIMRC $VIMRC
+
+}
+
+__install_git () {
+
+    GIT_CONFIG="~/.gitconfig"
+
+    NEW_GIT_CONFIG="$INSTALL_BASE_DIR/git/gitconfig"
+
+    # Backup gitconfig
+    if [ -e $GIT_CONFIG ]; then mv $GIT_CONFIG ${GIT_CONFIG}.old; fi
+
+    # Add symlink to new gitconfig
+    ln -s $GIT_CONFIG $NEW_GIT_CONFIG
+
+}
+
+__main

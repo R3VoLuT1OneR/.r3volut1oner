@@ -1,8 +1,11 @@
+BASE_DIR=`dirname $0`
+BASE_R3V_DIR=`dirname $BASE_DIR`
+
 # Editor
 export EDITOR='/usr/bin/vim'
 
 # Add bin path
-export PATH=$HOME/bin:$PATH
+export PATH=$BASE_R3V_DIR/bin:$PATH
 
 # Simple PS1
 PS1="\[\e[1;34m\][\u@\h]\[\e[m\] \[\e[1;32m\]\w \[\e[1;37m\]\$ \[\e[m\]"
