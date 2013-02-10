@@ -28,24 +28,24 @@
 # Authors:
 #    Seung Woo Shin <segv <at> sayclub.com>
 #    Sam Ghods <sam <at> box.net>
-
+ 
 """
 	debugger.py -- DBGp client: a remote debugger interface to DBGp protocol
-
+ 
     Usage:
         Use with the debugger.vim vim plugin
-
+ 
     This debugger is designed to be used with debugger.vim,
 	a vim plugin which provides a full debugging environment
 	right inside vim.
-
+ 
 	CHECK DEBUGGER.VIM FOR THE FULL DOCUMENTATION.
-
+ 
     Example usage:
         Place inside <source vim directory>/plugin/ along with
 		debugger.py.
 """
-
+ 
 import os
 import sys
 import vim
@@ -53,7 +53,7 @@ import socket
 import base64
 import traceback
 import xml.dom.minidom
-
+ 
 #######################################################################################################################
 #                                                                                                                     #
 # this diagram is little outdated.                                                                                    #
@@ -116,7 +116,7 @@ import xml.dom.minidom
 #                                                                                                                     #
 #                                                                                                                     #
 #######################################################################################################################
-
+ 
 #class XMLPrintFold(XMLPrint):
 #  def fixup_childs(self, line, node, level):
 #    line = ('{{{' + str(level+1)).ljust(level*4+6) + line +  '\n'
@@ -126,7 +126,7 @@ import xml.dom.minidom
 #  def fixup_single(self, line, node, level):
 #    return ''.ljust(level*4+6) + line + '\n'
 #
-
+ 
 class VimWindow:
   """ wrapper class of window of vim """
   def __init__(self, name = 'DEBUG_WINDOW'):
@@ -147,7 +147,7 @@ class VimWindow:
     pass
   def getwinnr(self):
     return int(vim.eval("bufwinnr('"+self.name+"')"))
-
+ 
   def xml_on_element(self, node):
     line = str(node.nodeName)
     if node.hasAttributes():
@@ -172,7 +172,7 @@ class VimWindow:
     return 'processing instruction'
   def xml_on_cdata_section(self, node):
     return node.data
-
+ 
   def write(self, msg):
     """ append last """
     self.prepare()
@@ -213,57 +213,57 @@ class VimWindow:
     if winnr != int(vim.eval("winnr()")):
       vim.command(str(winnr) + 'wincmd w')
     vim.command(cmd)
-
+ 
   def _xml_stringfy(self, node, level = 0, encoding = None):
     if node.nodeType   == node.ELEMENT_NODE:
       line = self.xml_on_element(node)
-
+ 
     elif node.nodeType == node.ATTRIBUTE_NODE:
       line = self.xml_on_attribute(node)
-
+ 
     elif node.nodeType == node.ENTITY_NODE:
       line = self.xml_on_entity(node)
-
+ 
     elif node.nodeType == node.COMMENT_NODE:
       line = self.xml_on_comment(node)
-
+ 
     elif node.nodeType == node.DOCUMENT_NODE:
       line = self.xml_on_document(node)
-
+ 
     elif node.nodeType == node.DOCUMENT_TYPE_NODE:
       line = self.xml_on_document_type(node)
-
+ 
     elif node.nodeType == node.NOTATION_NODE:
       line = self.xml_on_notation(node)
-
+ 
     elif node.nodeType == node.PROCESSING_INSTRUCTION_NODE:
       line = self.xml_on_processing_instruction(node)
-
+ 
     elif node.nodeType == node.CDATA_SECTION_NODE:
       line = self.xml_on_cdata_section(node)
-
+ 
     elif node.nodeType == node.TEXT_NODE:
       line = self.xml_on_text(node)
-
+ 
     else:
       line = 'unknown node type'
-
+ 
     if node.hasChildNodes():
       #print ''.ljust(level*4) + '{{{' + str(level+1)
       #print ''.ljust(level*4) + line
       return self.fixup_childs(line, node, level)
     else:
       return self.fixup_single(line, node, level)
-
+ 
     return line
-
+ 
   def fixup_childs(self, line, node, level):
     line = ''.ljust(level*4) + line +  '\n'
     line += self.xml_stringfy_childs(node, level+1)
     return line
   def fixup_single(self, line, node, level):
     return ''.ljust(level*4) + line + '\n'
-
+ 
   def xml_stringfy(self, xml):
     return self._xml_stringfy(xml)
   def xml_stringfy_childs(self, node, level = 0):
@@ -272,12 +272,12 @@ class VimWindow:
       line = str(line)
       line += str(self._xml_stringfy(cnode, level))
     return line
-
+ 
   def write_xml(self, xml):
     self.write(self.xml_stringfy(xml))
   def write_xml_childs(self, xml):
     self.write(self.xml_stringfy_childs(xml))
-
+ 
 class StackWindow(VimWindow):
   def __init__(self, name = 'STACK_WINDOW'):
     VimWindow.__init__(self, name)
@@ -300,14 +300,14 @@ class StackWindow(VimWindow):
   def highlight_stack(self, no):
     self.command('syntax clear')
     self.command('syntax region CurStack start="^' +str(no)+ ' " end="$"')
-
+ 
 class LogWindow(VimWindow):
   def __init__(self, name = 'LOG___WINDOW'):
     VimWindow.__init__(self, name)
   def on_create(self):
     self.command('set nowrap fdm=marker fmr={{{,}}} fdl=0')
     self.write('asdfasdf')
-
+ 
 class TraceWindow(VimWindow):
   def __init__(self, name = 'TRACE_WINDOW'):
     VimWindow.__init__(self, name)
@@ -321,7 +321,7 @@ class TraceWindow(VimWindow):
       return VimWindow.xml_on_element(self, node) + desc
   def on_create(self):
     self.command('set nowrap fdm=marker fmr={{{,}}} fdl=0')
-
+ 
 class WatchWindow(VimWindow):
   def __init__(self, name = 'WATCH_WINDOW'):
     VimWindow.__init__(self, name)
@@ -353,14 +353,14 @@ class WatchWindow(VimWindow):
   def xml_on_element(self, node):
     if node.nodeName == 'property':
       self.type = node.getAttribute('type')
-
+ 
       name      = node.getAttribute('name')
       fullname  = node.getAttribute('fullname')
       if name == '':
         name = 'EVAL_RESULT'
       if fullname == '':
         fullname = 'EVAL_RESULT'
-
+ 
       if self.type == 'uninitialized':
         return str(('%-20s' % name) + " = /* uninitialized */'';")
       else:
@@ -369,7 +369,7 @@ class WatchWindow(VimWindow):
       return "$command = '" + node.getAttribute('command') + "'"
     else:
       return VimWindow.xml_on_element(self, node)
-
+ 
   def xml_on_text(self, node):
     if self.type == 'string':
       return "'" + str(node.data) + "'"
@@ -406,7 +406,7 @@ class WatchWindow(VimWindow):
       return ('context_get', line[24:].strip(' '))
     else:
       return ('none', '')
-
+ 
 class HelpWindow(VimWindow):
   def __init__(self, name = 'HELP__WINDOW'):
     VimWindow.__init__(self, name)
@@ -424,7 +424,7 @@ class HelpWindow(VimWindow):
         '  <F12>  get property at cursor   |                       \n' + \
         '\n')
     self.command('1')
-
+ 
 class DebugUI:
   """ DEBUGUI class """
   def __init__(self, minibufexpl = 0):
@@ -440,7 +440,7 @@ class DebugUI:
     self.cursign  = None
     self.sessfile = "/tmp/debugger_vim_saved_session." + str(os.getpid())
     self.minibufexpl = minibufexpl
-
+ 
   def debug_mode(self):
     """ change mode to debug """
     if self.mode == 1: # is debug mode ?
@@ -454,7 +454,7 @@ class DebugUI:
       vim.command(str(i)+'wincmd w')
       self.winbuf[i] = vim.eval('bufnr("%")') # save buffer number, mksession does not do job perfectly
                                               # when buffer is not saved at all.
-
+ 
     vim.command('silent topleft new')                # create srcview window (winnr=1)
     for i in range(2, len(vim.windows)+1):
       vim.command(str(i)+'wincmd w')
@@ -462,48 +462,48 @@ class DebugUI:
     self.create()
     vim.command('1wincmd w') # goto srcview window(nr=1, top-left)
     self.cursign = '1'
-
+ 
     self.set_highlight()
-
+ 
   def normal_mode(self):
     """ restore mode to normal """
     if self.mode == 0: # is normal mode ?
       return
-
+ 
     vim.command('sign unplace 1')
     vim.command('sign unplace 2')
-
+ 
     # destory all created windows
     self.destroy()
-
+ 
     # restore session
     vim.command('source ' + self.sessfile)
     os.system('rm -f ' + self.sessfile)
-
+ 
     self.set_highlight()
-
-
+ 
+ 
     self.winbuf.clear()
     self.file    = None
     self.line    = None
     self.mode    = 0
     self.cursign = None
-
+ 
     if self.minibufexpl == 1:
       vim.command('MiniBufExplorer')         # close minibufexplorer if it is open
-
+ 
   def create(self):
     """ create windows """
     self.watchwin.create('vertical belowright new')
     self.helpwin.create('belowright new')
     self.stackwin.create('belowright new')
     self.tracewin.create('belowright new')
-
+ 
   def set_highlight(self):
     """ set vim highlight of debugger sign """
     vim.command("highlight DbgCurrent term=reverse ctermfg=White ctermbg=Red gui=reverse")
     vim.command("highlight DbgBreakPt term=reverse ctermfg=White ctermbg=Green gui=reverse")
-
+ 
   def destroy(self):
     """ destroy windows """
     self.helpwin.destroy()
@@ -519,26 +519,27 @@ class DebugUI:
       return '1'
   def set_srcview(self, file, line):
     """ set srcview windows to file:line and replace current sign """
-
+    file = file_mapping.remote_to_local_file(file)
+ 
     if file == self.file and self.line == line:
       return
-
+ 
     nextsign = self.next_sign()
-
+ 
     if file != self.file:
       self.file = file
       self.go_srcview()
       vim.command('silent edit ' + file)
-
+ 
     vim.command('sign place ' + nextsign + ' name=current line='+str(line)+' file='+file)
     vim.command('sign unplace ' + self.cursign)
-
+ 
     vim.command('sign jump ' + nextsign + ' file='+file)
     #vim.command('normal z.')
-
+ 
     self.line    = line
     self.cursign = nextsign
-
+ 
 class DbgProtocol:
   """ DBGp Procotol class """
   def __init__(self, port = 9000):
@@ -560,7 +561,7 @@ class DbgProtocol:
       self.stop()
       print 'timeout'
       return
-
+ 
     print 'connection from ', address
     self.isconned = 1
     serv.close()
@@ -607,7 +608,7 @@ class DbgProtocol:
     return body
   def send_msg(self, cmd):
     self.sock.send(cmd + '\0')
-
+ 
 class BreakPoint:
   """ Breakpoint class """
   def __init__(self):
@@ -653,11 +654,11 @@ class BreakPoint:
   def list(self):
     """ return list of breakpoint number """
     return self.breakpt.keys()
-
+ 
 class Debugger:
   """ Main Debugger class """
-
-
+ 
+ 
   #################################################################################################################
   # Internal functions
   #
@@ -666,7 +667,7 @@ class Debugger:
     socket.setdefaulttimeout(5)
     self.port       = port
     self.debug      = debug
-
+ 
     self.current    = None
     self.file       = None
     self.lasterror  = None
@@ -676,19 +677,19 @@ class Debugger:
     self.curstack   = 0
     self.laststack  = 0
     self.bptsetlst  = {} 
-
+ 
     self.status        = None
     self.max_children  = max_children
     self.max_data      = max_data
     self.max_depth     = max_depth
-
+ 
     self.protocol   = DbgProtocol(self.port)
-
+ 
     self.ui         = DebugUI(minibufexpl)
     self.breakpt    = BreakPoint()
-
+ 
     vim.command('sign unplace *')
-
+ 
   def clear(self):
     self.current   = None
     self.lasterror = None
@@ -698,9 +699,9 @@ class Debugger:
     self.curstack  = 0
     self.laststack = 0
     self.bptsetlst = {} 
-
+ 
     self.protocol.close()
-
+ 
   def send(self, msg):
     """ send message """
     self.protocol.send_msg(msg)
@@ -739,7 +740,7 @@ class Debugger:
   #
   #
   #################################################################################################################
-
+ 
   #################################################################################################################
   # Internal message handlers
   #
@@ -761,7 +762,7 @@ class Debugger:
     if len(errors)>0:
       self.handle_response_error(res)
       return
-
+ 
     command = res.firstChild.getAttribute('command')
     try:
       handler = getattr(self, 'handle_response_' + command)
@@ -770,7 +771,7 @@ class Debugger:
       return
     handler(res)
     return
-
+ 
   def handle_init(self, res):
     """handle <init> tag
     <init appid="7035" fileuri="file:///home/segv/htdocs/index.php" language="PHP" protocol_version="1.0">
@@ -790,7 +791,7 @@ class Debugger:
    
     file = res.firstChild.getAttribute('fileuri')[7:]
     self.ui.set_srcview(file, 1)
-
+ 
   def handle_response_error(self, res):
     """ handle <error> tag """
     self.ui.tracewin.write_xml_childs(res)
@@ -806,18 +807,18 @@ class Debugger:
 #      code = error.getAttribute('code')
 #      print 'error code=', code
 #    print res
-
+ 
   def handle_response_stack_get(self, res):
     """handle <response command=stack_get> tag
     <response command="stack_get" transaction_id="1 ">
       <stack filename="file:///home/segv/htdocs/index.php" level="0" lineno="41" where="{main}"/>
     </response>"""
-
+ 
     stacks = res.getElementsByTagName('stack')
     if len(stacks)>0:
       self.curstack  = 0
       self.laststack = len(stacks) - 1
-
+ 
       self.stacks    = []
       for s in stacks:
         self.stacks.append( {'file':  s.getAttribute('filename')[7:], \
@@ -825,14 +826,14 @@ class Debugger:
                              'where': s.getAttribute('where'),        \
                              'level': int(s.getAttribute('level'))
                              } )
-
+ 
       self.ui.stackwin.clean()
       self.ui.stackwin.highlight_stack(self.curstack)
-
+ 
       self.ui.stackwin.write_xml_childs(res.firstChild) #str(res.toprettyxml()))
       self.ui.set_srcview( self.stacks[self.curstack]['file'], self.stacks[self.curstack]['line'] )
-
-
+ 
+ 
   def handle_response_step_out(self, res):
     """handle <response command=step_out> tag
     <response command="step_out" reason="ok" status="break" transaction_id="1 "/>"""
@@ -896,7 +897,7 @@ class Debugger:
   #
   #
   #################################################################################################################
-
+ 
   #################################################################################################################
   # debugger command functions
   #
@@ -908,7 +909,7 @@ class Debugger:
   #   dbg.command('step_into')  # sends 'step_into' message
   #   dbg.stop()                # stop debugger
   #
-
+ 
   def command(self, cmd, arg1 = '', arg2 = ''):
     """ general command sender (receive response too) """
     if self.running == 0:
@@ -928,52 +929,52 @@ class Debugger:
       self.protocol.accept()
       self.ui.debug_mode()
       self.running = 1
-
+ 
       self.recv(1)
-
+ 
       # set max data to get with eval results
       self.command('feature_set', '-n max_children -v ' + self.max_children)
       self.command('feature_set', '-n max_data -v ' + self.max_data)
       self.command('feature_set', '-n max_depth -v ' + self.max_depth)
-
+ 
       self.command('step_into')
-
+ 
       flag = 0
       for bno in self.breakpt.list():
         msgid = self.send_command('breakpoint_set', \
-                                  '-t line -f ' + self.breakpt.getfile(bno) + ' -n ' + str(self.breakpt.getline(bno)) + ' -s enabled', \
+                                  '-t line -f ' + file_mapping.local_to_remote_file(self.breakpt.getfile(bno)) + ' -n ' + str(self.breakpt.getline(bno)) + ' -s enabled', \
                                   self.breakpt.getexp(bno))
         self.bptsetlst[msgid] = bno
         flag = 1
       if flag:
         self.recv()
-
+ 
       self.ui.go_srcview()
-
+ 
   def quit(self):
     self.ui.normal_mode()
     self.clear()
     #vim.command('MiniBufExplorer')
-
+ 
   def stop(self):
     self.clear()
-
+ 
   def up(self):
     if self.curstack > 0:
       self.curstack -= 1
       self.ui.stackwin.highlight_stack(self.curstack)
       self.ui.set_srcview(self.stacks[self.curstack]['file'], self.stacks[self.curstack]['line'])
-
+ 
   def down(self):
     if self.curstack < self.laststack:
       self.curstack += 1
       self.ui.stackwin.highlight_stack(self.curstack)
       self.ui.set_srcview(self.stacks[self.curstack]['file'], self.stacks[self.curstack]['line'])
-
+ 
   def mark(self, exp = ''):
     (row, rol) = vim.current.window.cursor
     file       = vim.current.buffer.name
-
+ 
     bno = self.breakpt.find(file, row)
     if bno != None:
       id = self.breakpt.getid(bno)
@@ -987,14 +988,14 @@ class Debugger:
       vim.command('sign place ' + str(bno) + ' name=breakpt line=' + str(row) + ' file=' + file)
       if self.protocol.isconnected():
         msgid = self.send_command('breakpoint_set', \
-                                  '-t line -f ' + self.breakpt.getfile(bno) + ' -n ' + str(self.breakpt.getline(bno)), \
+                                  '-t line -f ' + file_mapping.local_to_remote_file(self.breakpt.getfile(bno)) + ' -n ' + str(self.breakpt.getline(bno)), \
                                   self.breakpt.getexp(bno))
         self.bptsetlst[msgid] = bno
         self.recv()
-
+ 
   def watch_input(self, mode, arg = ''):
     self.ui.watchwin.input(mode, arg)
-
+ 
   def property_get(self, name = ''):
     if name == '':
       name = vim.eval('expand("<cword>")')
@@ -1018,50 +1019,50 @@ class Debugger:
       print cmd
     else:
       print "no commands", cmd, expr
-
-
+ 
+ 
   #
   #
   #################################################################################################################
-
-
-
+ 
+ 
+ 
 #################################################################################################################
 #
 # Try - Catch Wrapper 
 #
 #################################################################################################################
-
-
+ 
+ 
 def debugger_init(debug = 0):
   global debugger
-
+ 
   # get needed vim variables
-
+ 
   # port that the engine will connect on
   port = int(vim.eval('debuggerPort'))
   if port == 0:
     port = 9000
-
+ 
   # the max_depth variable to set in the engine
   max_children = vim.eval('debuggerMaxChildren')
   if max_children == '':
     max_children = '32'
-
+ 
   max_data = vim.eval('debuggerMaxData')
   if max_data == '':
     max_data = '1024'
-
+ 
   max_depth = vim.eval('debuggerMaxDepth')
   if max_depth == '':
     max_depth = '1'
-
+ 
   minibufexpl = int(vim.eval('debuggerMiniBufExpl'))
   if minibufexpl == 0:
     minibufexpl = 0
-
+ 
   debugger  = Debugger(port, max_children, max_data, max_depth, minibufexpl, debug)
-
+ 
 def debugger_command(msg, arg1 = '', arg2 = ''):
   try:
     debugger.command(msg, arg1, arg2)
@@ -1072,7 +1073,7 @@ def debugger_command(msg, arg1 = '', arg2 = ''):
     debugger.ui.tracewin.write("".join(traceback.format_tb( sys.exc_info()[2])))
     debugger.stop()
     print 'Connection closed, stop debugging', sys.exc_info()
-
+ 
 def debugger_run():
   try:
     debugger.run()
@@ -1081,7 +1082,7 @@ def debugger_run():
     debugger.ui.tracewin.write("".join(traceback.format_tb( sys.exc_info()[2])))
     debugger.stop()
     print 'Connection closed, stop debugging', sys.exc_info()
-
+ 
 def debugger_watch_input(cmd, arg = ''):
   try:
     if arg == '<cword>':
@@ -1092,7 +1093,7 @@ def debugger_watch_input(cmd, arg = ''):
     debugger.ui.tracewin.write( "".join(traceback.format_tb(sys.exc_info()[2])) )
     debugger.stop()
     print 'Connection closed, stop debugging'
-
+ 
 def debugger_context():
   try:
     debugger.command('context_get')
@@ -1101,7 +1102,7 @@ def debugger_context():
     debugger.ui.tracewin.write("".join(traceback.format_tb( sys.exc_info()[2])))
     debugger.stop()
     print 'Connection closed, stop debugging'
-
+ 
 def debugger_property(name = ''):
   try:
     debugger.property_get()
@@ -1110,7 +1111,7 @@ def debugger_property(name = ''):
     debugger.ui.tracewin.write("".join(traceback.format_tb( sys.exc_info()[2])))
     debugger.stop()
     print 'Connection closed, stop debugging', sys.exc_info()
-
+ 
 def debugger_mark(exp = ''):
   try:
     debugger.mark(exp)
@@ -1119,7 +1120,7 @@ def debugger_mark(exp = ''):
     debugger.ui.tracewin.write("".join(traceback.format_tb( sys.exc_info()[2])))
     debugger.stop()
     print 'Connection closed, stop debugging', sys.exc_info()
-
+ 
 def debugger_up():
   try:
     debugger.up()
@@ -1128,7 +1129,7 @@ def debugger_up():
     debugger.ui.tracewin.write("".join(traceback.format_tb( sys.exc_info()[2])))
     debugger.stop()
     print 'Connection closed, stop debugging', sys.exc_info()
-
+ 
 def debugger_down():
   try:
     debugger.down()
@@ -1137,25 +1138,25 @@ def debugger_down():
     debugger.ui.tracewin.write("".join(traceback.format_tb( sys.exc_info()[2])))
     debugger.stop()
     print 'Connection closed, stop debugging', sys.exc_info()
-
+ 
 def debugger_quit():
   global debugger
   debugger.quit()
-
+ 
 mode = 0
 def debugger_resize():
   global mode
   mode = mode + 1
   if mode >= 3:
     mode = 0
-
+ 
   if mode == 0:
     vim.command("wincmd =")
   elif mode == 1:
     vim.command("wincmd |")
   if mode == 2:
     vim.command("wincmd _")
-
+ 
 error_msg = { \
     # 000 Command parsing errors
     0   : """no error""",                                                                                                                                                      \
@@ -1188,4 +1189,42 @@ error_msg = { \
     998 : """An internal exception in the debugger occurred""",                                                                                                                \
     999 : """Unknown error """                                                                                                                                                 \
 }
-
+ 
+class FileMapping: 
+    def __init__(self, mapping_file): 
+        self.local_to_remote = {} 
+        self.remote_to_local = {} 
+ 
+        mapping = open(mapping_file, 'r') 
+        for line in mapping: 
+            local, remote = line.split(' ') 
+ 
+            local = local.strip() 
+            remote = remote.strip() 
+ 
+            if not (local in self.local_to_remote): 
+                self.local_to_remote[local] = [] 
+            self.local_to_remote[local].append(remote) 
+ 
+            if not (remote in self.remote_to_local): 
+                self.remote_to_local[remote] = [] 
+            self.remote_to_local[remote].append(local) 
+ 
+    def local_to_remote_file(self, local): 
+        for local_path in self.local_to_remote.keys(): 
+            if local.startswith(local_path): 
+                # use the first mapping as we don't know which one we should take 
+                remote_path = self.local_to_remote[local_path][0] 
+                return remote_path + local[len(local_path):] 
+ 
+    def remote_to_local_file(self, remote): 
+        for remote_path in self.remote_to_local.keys(): 
+            if remote.startswith(remote_path): 
+                for local_path in self.remote_to_local[remote_path]: 
+                    local = local_path + remote[len(remote_path):] 
+                    # use the first existing file 
+                    if os.path.exists(local): 
+                        return local 
+        return None 
+ 
+file_mapping = FileMapping(os.getenv('HOME') + "/.r3volut1oner/vim/debugger_mapping")
